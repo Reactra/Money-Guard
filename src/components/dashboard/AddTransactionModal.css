@@ -9,7 +9,7 @@
   bottom: 0;
   overflow-y: auto;
   z-index: 1500;
-  background-image: url('/img/auth/transaction-module-image@1x.png');
+  background-image: url('/img/auth/transaction-module-image@1x.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -28,7 +28,7 @@
 
 @media (min-resolution: 1.5dppx), (-webkit-min-device-pixel-ratio: 1.5) {
   .atm-modal-backdrop {
-    background-image: url('/img/auth/transaction-module-image@2x.png');
+    background-image: url('/img/auth/transaction-module-image@2x.jpg');
   }
 }
 

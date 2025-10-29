@@ -8,7 +8,7 @@
   bottom: 0;
   z-index: 1600;
   
-  background-image: url('/img/auth/box-bg.png');
+  background-image: url('/img/auth/box-bg.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -90,7 +90,7 @@
   }
 
   .logout-modal-content {
-    background-image: url('/img/auth/box-bg.png');
+    background-image: url('/img/auth/box-bg.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
