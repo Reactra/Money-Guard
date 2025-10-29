@@ -1,0 +1,141 @@
+// src/components/dashboard/TransactionsList.jsx
+import React, { useState, useEffect, useMemo } from 'react';
+import TransactionItem from './TransactionItem';
+import './TransactionsList.css';
+
+import {
+  useGetTransactionsQuery,
+  useDeleteTransactionMutation,
+} from '../../store/api/transactionsApi';
+import { toast } from 'react-toastify';
+import { RiPencilFill } from 'react-icons/ri';
+import { formatDate } from '../../utils/dateUtils';
+import { formatCurrency } from '../../utils/formatUtils';
+
+const TransactionsList = ({ onEdit, categoryMap, isLoadingCategories }) => {
+  const {
+    data: transactions,
+    isLoading: isLoadingTransactions,
+    isError: isErrorTransactions,
+    error: errorTransactions,
+  } = useGetTransactionsQuery();
+  const [deleteTransaction, { isLoading: isDeleting }] =
+    useDeleteTransactionMutation();
+  const [selectedTransactionId, setSelectedTransactionId] = useState(null);
+
+  const sortedTransactions = useMemo(() => {
+    if (!transactions) return [];
+    const list = [...transactions];
+    return list.reverse();
+  }, [transactions]);
+  useEffect(() => {
+    if (!sortedTransactions || sortedTransactions.length === 0) {
+      setSelectedTransactionId(null);
+      return;
+    }
+    const latestTransactionId = sortedTransactions[0].id;
+    if (selectedTransactionId !== latestTransactionId) {
+      setSelectedTransactionId(latestTransactionId);
+    }
+  }, [sortedTransactions]);
+
+  const handleDelete = async (id) => {
+    if (isDeleting) return;
+    try {
+      await deleteTransaction(id).unwrap();
+      toast.success('İşlem başarıyla silindi!');
+    } catch (err) {
+      console.error('Failed to delete transaction:', err);
+      toast.error(err.data?.message || 'İşlem silinemedi.');
+    }
+  };
+
+  if (isLoadingTransactions || isLoadingCategories) {
+    return (
+      <div className="transactions-list-container">
+        <p className="no-transactions-message">Veriler yükleniyor...</p>
+      </div>
+    );
+  }
+  if (isErrorTransactions) {
+    // ... (hata mesajı) ...
+  }
+  if (!sortedTransactions || sortedTransactions.length === 0) {
+    return (
+      <div className="transactions-list-container">
+        <p className="no-transactions-message">Henüz bir işlem bulunmuyor.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="transactions-list-container">
+      <div className="mobile-transaction-list">
+        {sortedTransactions.map((transaction) => (
+          <TransactionItem
+            key={transaction.id}
+            transaction={transaction}
+            onEdit={onEdit}
+            onDelete={handleDelete}
+            isActive={selectedTransactionId === transaction.id}
+            onSelect={() => setSelectedTransactionId(transaction.id)}
+            categoryMap={categoryMap}
+          />
+        ))}
+      </div>
+
+      <div className="desktop-transactions-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Category</th>
+              <th>Comment</th>
+              <th>Sum</th>
+              <th> </th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedTransactions.map((transaction) => {
+              const isExpense = transaction.type === 'EXPENSE';
+              const sumClass = isExpense
+                ? 'table-sum-expense'
+                : 'table-sum-income';
+              const categoryName = categoryMap[transaction.categoryId] || 'N/A';
+
+              return (
+                <tr key={transaction.id}>
+                  <td>{formatDate(transaction.transactionDate)}</td>
+                  <td className="table-type">{isExpense ? '-' : '+'}</td>
+                  <td>{categoryName}</td>
+                  <td className="table-comment">{transaction.comment}</td>
+                  <td className={sumClass}>
+                    {formatCurrency(Math.abs(transaction.amount))}
+                  </td>
+                  <td className="table-actions">
+                    <button
+                      className="table-edit-btn"
+                      onClick={() => onEdit(transaction)}
+                    >
+                      <RiPencilFill />
+                    </button>
+                    <button
+                      className="table-delete-btn"
+                      onClick={() => handleDelete(transaction.id)}
+                      disabled={isDeleting}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default TransactionsList;
