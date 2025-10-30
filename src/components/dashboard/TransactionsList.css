@@ -2,6 +2,26 @@
 
 .transactions-list-container {
   width: 100%;
+  flex-grow: 1;
+  overflow-y: auto;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(191, 180, 221, 1) transparent;
+}
+
+.transactions-list-container::-webkit-scrollbar {
+  width: 6px;
+  background-color: transparent;
+}
+.transactions-list-container::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+.transactions-list-container::-webkit-scrollbar-thumb {
+  background-color: rgba(191, 180, 221, 1);
+  border-radius: 4px;
+}
+.transactions-list-container::-webkit-scrollbar-button {
+  display: none !important;
 }
 
 /* --- MOBİL GÖRÜNÜM --- */
