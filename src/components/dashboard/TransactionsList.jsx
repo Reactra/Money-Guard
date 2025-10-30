@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import TransactionItem from './TransactionItem';
 import './TransactionsList.css';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 import {
   useGetTransactionsQuery,
@@ -23,11 +24,15 @@ const TransactionsList = ({ onEdit, categoryMap, isLoadingCategories }) => {
     useDeleteTransactionMutation();
   const [selectedTransactionId, setSelectedTransactionId] = useState(null);
 
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [transactionIdToDelete, setTransactionIdToDelete] = useState(null);
+
   const sortedTransactions = useMemo(() => {
     if (!transactions) return [];
     const list = [...transactions];
     return list.reverse();
   }, [transactions]);
+  
   useEffect(() => {
     if (!sortedTransactions || sortedTransactions.length === 0) {
       setSelectedTransactionId(null);
@@ -39,15 +44,29 @@ const TransactionsList = ({ onEdit, categoryMap, isLoadingCategories }) => {
     }
   }, [sortedTransactions]);
 
-  const handleDelete = async (id) => {
-    if (isDeleting) return;
+  const handleDeleteConfirm = async () => {
+    if (isDeleting || !transactionIdToDelete) return; 
+    
     try {
-      await deleteTransaction(id).unwrap();
+      await deleteTransaction(transactionIdToDelete).unwrap();
       toast.success('İşlem başarıyla silindi!');
     } catch (err) {
       console.error('Failed to delete transaction:', err);
       toast.error(err.data?.message || 'İşlem silinemedi.');
     }
+    
+    setIsDeleteModalOpen(false);
+    setTransactionIdToDelete(null);
+  };
+
+  const handleDeleteRequest = (id) => {
+    setTransactionIdToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+  
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false); 
+    setTransactionIdToDelete(null); 
   };
 
   if (isLoadingTransactions || isLoadingCategories) {
@@ -76,7 +95,7 @@ const TransactionsList = ({ onEdit, categoryMap, isLoadingCategories }) => {
             key={transaction.id}
             transaction={transaction}
             onEdit={onEdit}
-            onDelete={handleDelete}
+            onDelete={handleDeleteRequest}
             isActive={selectedTransactionId === transaction.id}
             onSelect={() => setSelectedTransactionId(transaction.id)}
             categoryMap={categoryMap}
@@ -122,7 +141,7 @@ const TransactionsList = ({ onEdit, categoryMap, isLoadingCategories }) => {
                     </button>
                     <button
                       className="table-delete-btn"
-                      onClick={() => handleDelete(transaction.id)}
+                      onClick={() => handleDeleteRequest(transaction.id)}
                       disabled={isDeleting}
                     >
                       Delete
@@ -134,6 +153,13 @@ const TransactionsList = ({ onEdit, categoryMap, isLoadingCategories }) => {
           </tbody>
         </table>
       </div>
+
+      {isDeleteModalOpen && (
+        <DeleteConfirmationModal
+          onClose={handleCloseDeleteModal}
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
     </div>
   );
 };
